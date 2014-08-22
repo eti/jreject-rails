@@ -1,89 +1,87 @@
 /*
  * jReject (jQuery Browser Rejection Plugin)
- * Version 1.0.1
+ * Version 1.1.0
  * URL: http://jreject.turnwheel.com/
  * Description: jReject is a easy method of rejecting specific browsers on your site
  * Author: Steven Bower (TurnWheel Designs) http://turnwheel.com/
- * Copyright: Copyright (c) 2009-2011 Steven Bower under dual MIT/GPL license.
+ * Copyright: Copyright (c) 2009-2014 Steven Bower under dual MIT/GPLv2 license.
  */
 
 (function($) {
 $.reject = function(options) {
-	var opts = $.extend(true,{
-		reject : { // Rejection flags for specific browsers
+	var opts = $.extend(true, {
+		// Specifies which browsers/versions will be blocked
+		reject : {
 			all: false, // Covers Everything (Nothing blocked)
-			msie5: true, msie6: true // Covers MSIE 5-6 (Blocked by default)
+			msie: 6 // Covers MSIE <= 6 (Blocked by default)
 			/*
-			 * Possibilities are endless...
+			 * Many possible combinations.
+			 * You can specify browser (msie, chrome, firefox)
+			 * You can specify rendering engine (geko, trident)
+			 * You can specify OS (Win, Mac, Linux, Solaris, iPhone, iPad)
 			 *
-			 * // MSIE Flags (Global, 5-8)
-			 * msie, msie5, msie6, msie7, msie8,
-			 * // Firefox Flags (Global, 1-3)
-			 * firefox, firefox1, firefox2, firefox3,
-			 * // Konqueror Flags (Global, 1-3)
-			 * konqueror, konqueror1, konqueror2, konqueror3,
-			 * // Chrome Flags (Global, 1-4)
-			 * chrome, chrome1, chrome2, chrome3, chrome4,
-			 * // Safari Flags (Global, 1-4)
-			 * safari, safari2, safari3, safari4,
-			 * // Opera Flags (Global, 7-10)
-			 * opera, opera7, opera8, opera9, opera10,
-			 * // Rendering Engines (Gecko, Webkit, Trident, KHTML, Presto)
-			 * gecko, webkit, trident, khtml, presto,
-			 * // Operating Systems (Win, Mac, Linux, Solaris, iPhone)
-			 * win, mac, linux, solaris, iphone,
-			 * unknown // Unknown covers everything else
+			 * You can specify versions of each.
+			 * Examples: msie9: true, firefox8: true,
+			 *
+			 * You can specify the highest number to reject.
+			 * Example: msie: 9 (9 and lower are rejected.
+			 *
+			 * There is also "unknown" that covers what isn't detected
+			 * Example: unknown: true
 			 */
 		},
 		display: [], // What browsers to display and their order (default set below)
 		browserShow: true, // Should the browser options be shown?
 		browserInfo: { // Settings for which browsers to display
+			chrome: {
+				// Text below the icon
+				text: 'Google Chrome',
+				// URL For icon/text link
+				url: 'http://www.google.com/chrome/'
+				// (Optional) Use "allow" to customized when to show this option
+				// Example: to show chrome only for IE users
+				// allow: { all: false, msie: true }
+			},
 			firefox: {
-				text: 'Firefox 12', // Text below the icon
-				url: 'http://www.mozilla.com/firefox/' // URL For icon/text link
+				text: 'Mozilla Firefox',
+				url: 'http://www.mozilla.com/firefox/'
 			},
 			safari: {
-				text: 'Safari 5',
+				text: 'Safari',
 				url: 'http://www.apple.com/safari/download/'
 			},
 			opera: {
-				text: 'Opera 11',
+				text: 'Opera',
 				url: 'http://www.opera.com/download/'
 			},
-			chrome: {
-				text: 'Chrome 18',
-				url: 'http://www.google.com/chrome/'
-			},
 			msie: {
-				text: 'Internet Explorer 9',
+				text: 'Internet Explorer',
 				url: 'http://www.microsoft.com/windows/Internet-explorer/'
-			},
-			gcf: {
-				text: 'Google Chrome Frame',
-				url: 'http://code.google.com/chrome/chromeframe/',
-				// This browser option will only be displayed for MSIE
-				allow: { all: false, msie: true }
 			}
 		},
 
-		// Header of pop-up window
+		// Pop-up Window Text
 		header: 'Did you know that your Internet Browser is out of date?',
-		// Paragraph 1
+
 		paragraph1: 'Your browser is out of date, and may not be compatible with '+
 					'our website. A list of the most popular web browsers can be '+
 					'found below.',
-		// Paragraph 2
+
 		paragraph2: 'Just click on the icons to get to the download page',
-		close: true, // Allow closing of window
+
+		// Allow closing of window
+		close: true,
+
 		// Message displayed below closing link
 		closeMessage: 'By closing this window you acknowledge that your experience '+
 						'on this website may be degraded',
-		closeLink: 'Close This Window', // Text for closing link
-		closeURL: '#', // Close URL
-		closeESC: true, // Allow closing of window with esc key
+		closeLink: 'Close This Window',
+		closeURL: '#',
 
-		// If cookies should be used to remmember if the window was closed
-		// See cookieSettings for more options
+		// Allows closing of window with esc key
+		closeESC: true,
+
+		// Use cookies to remmember if window was closed previously?
 		closeCookie: false,
 		// Cookie settings are only used if closeCookie is true
 		cookieSettings: {
@@ -95,9 +93,12 @@ $.reject = function(options) {
 			expires: 0
 		},
 
-		imagePath: './assets/', // Path where images are located
-		overlayBgColor: '#000', // Background color for overlay
-		overlayOpacity: 0.8, // Background transparency (0-1)
+		// Path where images are located
+		imagePath: './images/',
+		// Background color for overlay
+		overlayBgColor: '#000',
+		// Background transparency (0-1)
+		overlayOpacity: 0.8,
 
 		// Fade in time on open ('slow','medium','fast' or integer in ms)
 		fadeInTime: 'fast',
@@ -111,33 +112,43 @@ $.reject = function(options) {
 	}, options);
 
 	// Set default browsers to display if not already defined
-	if (opts.display.length < 1)
-		opts.display = ['firefox','chrome','msie','safari','opera','gcf'];
+	if (opts.display.length < 1) {
+		opts.display = [ 'chrome','firefox','safari','opera','msie' ];
+	}
 
 	// beforeRject: Customized Function
-	if ($.isFunction(opts.beforeReject)) opts.beforeReject();
+	if ($.isFunction(opts.beforeReject)) {
+		opts.beforeReject();
+	}
 
 	// Disable 'closeESC' if closing is disabled (mutually exclusive)
-	if (!opts.close) opts.closeESC = false;
+	if (!opts.close) {
+		opts.closeESC = false;
+	}
 
 	// This function parses the advanced browser options
 	var browserCheck = function(settings) {
 		// Check 1: Look for 'all' forced setting
-		// Check 2: Operating System (eg. 'win','mac','linux','solaris','iphone')
-		// Check 3: Rendering engine (eg. 'webkit', 'gecko', 'trident')
-		// Check 4: Browser name (eg. 'firefox','msie','chrome')
-		// Check 5: Browser+major version (eg. 'firefox3','msie7','chrome4')
-		return (settings['all'] ? true : false) ||
-			(settings[$.os.name] ? true : false) ||
-			(settings[$.layout.name] ? true : false) ||
-			(settings[$.browser.name] ? true : false) ||
-			(settings[$.browser.className] ? true : false);
+		// Check 2: Browser+major version (optional) (eg. 'firefox','msie','{msie: 6}')
+		// Check 3: Browser+major version (eg. 'firefox3','msie7','chrome4')
+		// Check 4: Rendering engine+version (eg. 'webkit', 'gecko', '{webkit: 537.36}')
+		// Check 5: Operating System (eg. 'win','mac','linux','solaris','iphone')
+		var layout = settings[$.layout.name],
+			browser = settings[$.browser.name];
+		return !!(settings['all']
+			|| (browser && (browser === true || $.browser.versionNumber <= browser))
+			|| settings[$.browser.className]
+			|| (layout && (layout === true || $.layout.versionNumber <= layout))
+			|| settings[$.os.name]);
 	};
 
 	// Determine if we need to display rejection for this browser, or exit
 	if (!browserCheck(opts.reject)) {
-		// onFail: Customized Function
-		if ($.isFunction(opts.onFail)) opts.onFail();
+		// onFail: Optional Callback
+		if ($.isFunction(opts.onFail)) {
+			opts.onFail();
+		}
+
 		return false;
 	}
 
@@ -149,6 +160,7 @@ $.reject = function(options) {
 		// Cookies Function: Handles creating/retrieving/deleting cookies
 		// Cookies are only used for opts.closeCookie parameter functionality
 		var _cookie = function(name, value) {
+			// Save cookie
 			if (typeof value != 'undefined') {
 				var expires = '';
 
@@ -166,8 +178,11 @@ $.reject = function(options) {
 				document.cookie = name+'='+
 					encodeURIComponent((!value) ? '' : value)+expires+
 					'; path='+path;
+
+				return true;
 			}
-			else { // Get cookie value
+			// Get cookie
+			else {
 				var cookie,val = null;
 
 				if (document.cookie && document.cookie !== '') {
@@ -187,12 +202,15 @@ $.reject = function(options) {
 					}
 				}
 
-				return val; // Return cookie value
+				// Returns cookie value
+				return val;
 			}
 		};
 
 		// If cookie is set, return false and don't display rejection
-		if (_cookie(COOKIE_NAME)) return false;
+		if (_cookie(COOKIE_NAME)) {
+			return false;
+		}
 	}
 
 	// Load background overlay (jr_overlay) + Main wrapper (jr_wrap) +
@@ -203,10 +221,10 @@ $.reject = function(options) {
 		(opts.paragraph1 === '' ? '' : '<p>'+opts.paragraph1+'</p>')+
 		(opts.paragraph2 === '' ? '' : '<p>'+opts.paragraph2+'</p>');
 
+	var displayNum = 0;
 	if (opts.browserShow) {
 		html += '<ul>';
 
-		var displayNum = 0; // Tracks number of browsers being displayed
 		// Generate the browsers to display
 		for (var x in opts.display) {
 			var browser = opts.display[x]; // Current Browser
@@ -214,16 +232,19 @@ $.reject = function(options) {
 
 			// If no info exists for this browser
 			// or if this browser is not suppose to display to this user
+			// based on "allow" flag
 			if (!info || (info['allow'] != undefined && !browserCheck(info['allow']))) {
 				continue;
 			}
 
 			var url = info.url || '#'; // URL to link text/icon to
+
 			// Generate HTML for this browser option
 			html += '<li id="jr_'+browser+'"><div class="jr_icon"></div>'+
 					'<div><a href="'+url+'">'+(info.text || 'Unknown')+'</a>'+
 					'</div></li>';
-			++displayNum; // Increment number of browser being displayed
+
+			++displayNum;
 		}
 
 		html += '</ul>';
@@ -245,10 +266,14 @@ $.reject = function(options) {
 	// When clicked, fadeOut and remove all elements
 	element.bind('closejr', function() {
 		// Make sure the permission to close is granted
-		if (!opts.close) return false;
+		if (!opts.close) {
+			return false;
+		}
 
 		// Customized Function
-		if ($.isFunction(opts.beforeClose)) opts.beforeClose();
+		if ($.isFunction(opts.beforeClose)) {
+			opts.beforeClose();
+		}
 
 		// Remove binding function so it
 		// doesn't get called more than once
@@ -259,7 +284,9 @@ $.reject = function(options) {
 			$(this).remove(); // Remove element from DOM
 
 			// afterClose: Customized Function
-			if ($.isFunction(opts.afterClose)) opts.afterClose();
+			if ($.isFunction(opts.afterClose)) {
+				opts.afterClose();
+			}
 		});
 
 		// Show elements that were hidden for layering issues
@@ -267,14 +294,19 @@ $.reject = function(options) {
 		$(elmhide).show().removeClass('jr_hidden');
 
 		// Set close cookie for next run
-		if (opts.closeCookie) _cookie(COOKIE_NAME,'true');
+		if (opts.closeCookie) {
+			_cookie(COOKIE_NAME, 'true');
+		}
+
 		return true;
 	});
 
 	// Tracks clicks in Google Analytics (category 'External Links')
 	// only if opts.analytics is enabled
-	var analytics = function (url) {
-		if (!opts.analytics) return false;
+	var analytics = function(url) {
+		if (!opts.analytics) {
+			return false;
+		}
 
 		// Get just the hostname
 		var host = url.split(/\/+/g)[1];
@@ -283,11 +315,10 @@ $.reject = function(options) {
 		// Attempts both versions of analytics code. (Newest first)
 		try {
 			// Newest analytics code
-			_gaq.push(['_trackEvent','External Links',  host, url]);
+			ga('send', 'event', 'External', 'Click', host, url);
 		} catch (e) {
 			try {
-				// Older analytics code
-				pageTracker._trackEvent('External Links', host, url);
+				_gaq.push([ '_trackEvent', 'External Links',  host, url ]);
 			} catch (e) { }
 		}
 	};
@@ -333,7 +364,7 @@ $.reject = function(options) {
 	});
 
 	element.find('#jr_inner li').css({ // Browser list items (li)
-		background: 'transparent url("'+opts.imagePath+'background_browser.gif")'+
+		background: 'transparent url("'+opts.imagePath+'background_browser.gif") '+
 					'no-repeat scroll left top'
 	});
 
@@ -362,7 +393,9 @@ $.reject = function(options) {
 		$(this).trigger('closejr');
 
 		// If plain anchor is set, return false so there is no page jump
-		if (opts.closeURL === '#') return false;
+		if (opts.closeURL === '#') {
+			return false;
+		}
 	});
 
 	// Set focus (fixes ESC key issues with forms and other focus bugs)
@@ -401,17 +434,22 @@ $.reject = function(options) {
 	if (opts.closeESC) {
 		$(document).bind('keydown',function(event) {
 			// ESC = Keycode 27
-			if (event.keyCode == 27) element.trigger('closejr');
+			if (event.keyCode == 27) {
+				element.trigger('closejr');
+			}
 		});
 	}
 
 	// afterReject: Customized Function
-	if ($.isFunction(opts.afterReject)) opts.afterReject();
+	if ($.isFunction(opts.afterReject)) {
+		opts.afterReject();
+	}
 
 	return true;
 };
 
 // Based on compatibility data from quirksmode.com
+// This is used to help calculate exact center of the page
 var _pageSize = function() {
 	var xScroll = window.innerWidth && window.scrollMaxX ?
 				window.innerWidth + window.scrollMaxX :
@@ -457,7 +495,7 @@ var _scrollSize = function() {
 
 /*
  * jQuery Browser Plugin
- * Version 2.4 / jReject 1.0.0
+ * Version 2.4 / jReject 1.0.x
  * URL: http://jquery.thewikies.com/browser
  * Description: jQuery Browser Plugin extends browser detection capabilities and
  * can assign browser selectors to CSS classes.
@@ -490,38 +528,53 @@ var _scrollSize = function() {
 					r.version = window.opera.version();
 				}
 
-				if (/safari/.test(r.name) && r.version > 400) {
-					r.version = '2.0';
+				if (/safari/.test(r.name)) {
+					var safariversion = /(safari)(\/|\s)([a-z0-9\.\+]*?)(\;|dev|rel|\s|$)/;
+					var res = safariversion.exec(i);
+					if (res && res[3] && res[3] < 400) {
+						r.version = '2.0';
+					}
 				}
+
 				else if (r.name === 'presto') {
 					r.version = ($.browser.version > 9.27) ? 'futhark' : 'linear_b';
 				}
 
+				if (/msie/.test(r.name) && r.version === x) {
+					var ieVersion = /rv:(\d+\.\d+)/.exec(i);
+					r.version = ieVersion[1];
+				}
+
 				r.versionNumber = parseFloat(r.version, 10) || 0;
 				var minorStart = 1;
+
 				if (r.versionNumber < 100 && r.versionNumber > 9) {
 					minorStart = 2;
 				}
+
 				r.versionX = (r.version !== x) ? r.version.substr(0, minorStart) : x;
 				r.className = r.name + r.versionX;
 
 				return r;
 			};
 
-		a = (/Opera|Navigator|Minefield|KHTML|Chrome/.test(a) ? m(a, [
+		a = (/Opera|Navigator|Minefield|KHTML|Chrome|CriOS/.test(a) ? m(a, [
 			[/(Firefox|MSIE|KHTML,\slike\sGecko|Konqueror)/, ''],
 			['Chrome Safari', 'Chrome'],
+			['CriOS', 'Chrome'],
 			['KHTML', 'Konqueror'],
 			['Minefield', 'Firefox'],
 			['Navigator', 'Netscape']
 		]) : a).toLowerCase();
 
 		$.browser = $.extend((!z) ? $.browser : {}, c(a,
-			/(camino|chrome|firefox|netscape|konqueror|lynx|msie|opera|safari)/,
-			[],
-			/(camino|chrome|firefox|netscape|netscape6|opera|version|konqueror|lynx|msie|safari)(\/|\s)([a-z0-9\.\+]*?)(\;|dev|rel|\s|$)/));
+			/(camino|chrome|crios|firefox|netscape|konqueror|lynx|msie|trident|opera|safari)/,
+			[
+				['trident', 'msie']
+			],
+			/(camino|chrome|crios|firefox|netscape|netscape6|opera|version|konqueror|lynx|msie|rv|safari)(:|\/|\s)([a-z0-9\.\+]*?)(\;|dev|rel|\s|$)/));
 
-		$.layout = c(a, /(gecko|konqueror|msie|opera|webkit)/, [
+		$.layout = c(a, /(gecko|konqueror|msie|trident|opera|webkit)/, [
 			['konqueror', 'khtml'],
 			['msie', 'trident'],
 			['opera', 'presto']
